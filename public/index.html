@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Slides Meets Gamma — 每個人都有一份 deck</title>
+<meta name="description" content="Gamma 社群活動的配對小工具：填 90 秒，拿到一份三張卡的迷你 deck，介紹你該認識的那個人。雙方同意才交換聯絡方式。" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  <div class="creatures" id="creatures" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <img class="topbar__wordmark" src="/assets/gamma-wordmark.png" alt="Gamma" height="22" />
+      <span class="topbar__sep" aria-hidden="true">×</span>
+      <span class="topbar__title">Slides Meets Gamma</span>
+    </div>
+    <nav class="topbar__nav" id="topnav"></nav>
+  </header>
+
+  <main id="app" class="app" aria-live="polite"></main>
+
+  <footer class="footer">
+    <span>Gamma 大使社群工具，非官方產品</span>
+    <span class="footer__dot">·</span>
+    <span>資料只在你同意時流動</span>
+  </footer>
+
+  <div class="present" id="present" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

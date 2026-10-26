@@ -1,0 +1,6 @@
+node_modules/
+data/attendees.json
+data/attendees.json.tmp
+.env
+.DS_Store
+*.log

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: slides-meets-gamma
+    runtime: node
+    plan: free
+    buildCommand: npm install --production=false
+    startCommand: npm start
+    healthCheckPath: /api/event
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: EVENT_ID
+        sync: false
+      - key: EVENT_NAME
+        sync: false
+      - key: EVENT_NAME_ZH
+        sync: false
+      - key: SCOUT_API_KEY
+        sync: false
+      - key: SCOUT_BASE_URL
+        sync: false
+      - key: SCOUT_MODEL
+        sync: false
+      - key: GAMMA_API_KEY
+        sync: false
