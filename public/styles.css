@@ -719,8 +719,9 @@ textarea { resize: vertical; min-height: 78px; }
 .intro-link {
   display: block;
   width: 100%;
-  max-height: 180px;
+  max-height: 230px;
   object-fit: cover;
+  object-position: 50% 34%;
   border-radius: 18px;
   margin: 12px 0 4px;
   border: 1px solid var(--line);
