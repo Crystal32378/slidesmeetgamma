@@ -688,3 +688,24 @@ textarea { resize: vertical; min-height: 78px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ── 手機修正（round 1 驗收後） ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .topbar__title { font-size: 15px; white-space: nowrap; }
+  .topbar__brand { min-width: 0; }
+  .topbar__nav { gap: 2px; }
+
+  .section__head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .section__head > div[style] { flex-wrap: wrap; }
+  .btn { white-space: nowrap; }
+
+  /* 插畫縮小，並把文字區讓開，避免蓋住一句話 */
+  .deck-card__art { right: -6px; top: -26px; }
+  .art-img { width: 112px; height: 80px; }
+  .deck-card__name,
+  .deck-card__tag { padding-right: 96px; }
+}
+@media (max-width: 640px) {
+  .topbar__title, .topbar__sep { display: none; }
+}
+.present .btn--ghost { color: var(--white); border-color: rgba(255, 255, 255, 0.55); background: transparent; }
