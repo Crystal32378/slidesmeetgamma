@@ -29,7 +29,7 @@ const BRIEF_SIZE = Number(process.env.BRIEF_SIZE || 3);
 const EVENT = {
   id: process.env.EVENT_ID || 'gamma-community',
   name: process.env.EVENT_NAME || 'Gamma Community Exclusive',
-  nameZh: process.env.EVENT_NAME_ZH || 'Gamma 社群專屬',
+  nameZh: process.env.EVENT_NAME_ZH || 'Gamma 社群限定',
   motto: 'Everyone brings a deck.',
   mottoZh: '每個人都有一份 deck 可以介紹自己。',
   date: process.env.EVENT_DATE || '',

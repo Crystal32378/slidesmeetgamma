@@ -172,12 +172,12 @@ function viewJoin() {
         <img class="hero__wordmark" src="/assets/gamma-wordmark.png" alt="Gamma" />
       </h1>
       <p class="hero__lede">${esc(event.mottoZh)}<br />
-        填 90 秒，拿到一份 3 張卡的 deck：每張卡介紹一位你該認識的人。
-        雙方都同意，聯絡方式才會出現。</p>
+        花 90 秒說說你在做什麼、想聊什麼，我們替你找幾位值得聊聊的人，每人一張卡。
+        聯絡方式要雙方都同意，才會交換。</p>
       <div class="hero__meta">
         <span class="chip chip--ghost">${counts.live} 位真人參加</span>
         <span class="chip chip--ghost">demo ${counts.demo} 位虛構角色</span>
-        <span class="chip chip--ghost">不收 email</span>
+        <span class="chip chip--ghost">不必用 email 註冊</span>
       </div>
     </div>
     <div class="hero__art">
@@ -189,7 +189,7 @@ function viewJoin() {
       </figure>
       <div class="hero__quote">
         ${artImg('/assets/peepers-portrait.jpg', '三眼貓 Peepers', 'peepers', 'hero__avatar')}
-        <div><b>Peepers：</b>我會看你的 deck 品味，替你挑人。但我只看，不替你談。</div>
+        <div><b>Peepers：</b>我會看你在做什麼、想聊什麼，替你挑幾位有話聊的人。要不要開口，由你決定。</div>
       </div>
     </div>
   </section>
@@ -199,17 +199,17 @@ function viewJoin() {
       <div class="section">
         <div class="section__head"><h3>1. 你是誰</h3><small>名字 + 一句話</small></div>
         <label class="field">
-          <span>怎麼稱呼你 <small>最多 40 字</small></span>
+          <span>大家要怎麼叫你？ <small>最多 40 字</small></span>
           <input type="text" name="displayName" maxlength="40" value="${esc(f.displayName)}" placeholder="Crystal / 林恩 / 愛穿紅色襪子的人" autocomplete="name" />
         </label>
         <label class="field">
-          <span>一句話介紹 <small>最多 120 字 · 這句會出現在別人的卡上</small></span>
+          <span>用一句話介紹自己 <small>最多 120 字 · 這句會出現在別人的卡上</small></span>
           <textarea name="tagline" maxlength="120" placeholder="我正在把一個想法講成三張卡。">${esc(f.tagline)}</textarea>
         </label>
       </div>
 
       <div class="section">
-        <div class="section__head"><h3>2. 你今天想找什麼</h3><small>最多 ${LIMITS.intentions} 項</small></div>
+        <div class="section__head"><h3>2. 今天想遇到什麼樣的人？</h3><small>最多 ${LIMITS.intentions} 項</small></div>
         <div class="chip-row">
           ${cat()
             .intents.map(
@@ -265,15 +265,15 @@ function viewJoin() {
       </div>
 
       <div class="section">
-        <div class="section__head"><h3>6. 怎麼找到你（選填）</h3><small>雙方都同意才顯示</small></div>
+        <div class="section__head"><h3>6. 想讓對方怎麼找到你（選填）</h3><small>雙方都同意才顯示</small></div>
         <label class="field">
           <span>聯絡方式 <small>LINE ID / Email / 桌號都可以</small></span>
           <input type="text" name="contact" maxlength="120" value="${esc(f.contact)}" placeholder="lineid: crystal / 3 號桌" autocomplete="off" />
         </label>
         <div class="notice">
           <span>🫧</span>
-          <div><strong>現在填的都看不到</strong>
-            對方按下「想認識」之前，只有你看得到。</div>
+          <div><strong>你現在填的，對方看不到</strong>
+            雙方同意前，不向對方顯示聯絡方式。</div>
         </div>
       </div>
 
@@ -284,17 +284,17 @@ function viewJoin() {
             <strong>現場參加</strong><small>和其他真人配對</small>
           </button>
           <button class="pick" data-mode="demo" aria-pressed="${f.mode === 'demo'}">
-            <strong>我先試玩</strong><small>只跟 8 位虛構角色配對</small>
+            <strong>我先試玩</strong><small>先和 8 位虛構角色玩一輪，不接觸真人</small>
           </button>
         </div>
       </div>
 
       <button class="btn btn--primary" id="join-btn" style="width:100%;padding:15px">
-        產生我的 deck ✦
+        做出我的 deck ✦
       </button>
       <p class="note" style="margin-top:10px">
-        名字與一句話會給配對到的人看；聯絡方式雙方都同意才交換。
-        隨時可在「我」刪掉全部資料。
+        名字和一句話會給配對到的人看。聯絡方式要雙方都同意才會交換。
+        想刪就刪，在「我」裡一次清空。
       </p>
     </section>
 
@@ -309,8 +309,8 @@ function viewJoin() {
       </div>
       <div class="notice" style="margin-top:16px">
         <span>🐈</span>
-        <div><strong>Peepers 看三件事</strong>
-          在做什麼、deck 品味、想聊什麼。有交集才配在一起。</div>
+        <div><strong>Peepers 只看三件事</strong>
+          你在做什麼、你的 deck 品味、你想聊什麼。有交集，才會被放在一起。</div>
       </div>
     </aside>
   </div>`;
@@ -337,10 +337,10 @@ function viewBrief() {
   if (!b || !b.cards.length) {
     return `
     <div class="empty">
-      <h3>現在還沒有跟你對味的人</h3>
+      <h3>今天還沒找到聊得來的人</h3>
       <p class="note" style="max-width:44ch;margin:0 auto">
-        現場有 ${b?.poolSize ?? 0} 位參加者，但沒有人跟你同樣的意圖。
-        等一等，或換個意圖再試。
+        現場有 ${b?.poolSize ?? 0} 位參加者，但暫時沒有人和你想找的人一樣。
+        換個意圖再試，或過一陣子再來看看。
       </p>
       <div class="card-actions" style="justify-content:center">
         <button class="btn btn--primary" data-reload-brief>再找一次</button>
@@ -352,7 +352,7 @@ function viewBrief() {
   <div class="section__head" style="margin-bottom:18px">
     <div>
       <span class="eyebrow">YOUR DECK · ${b.cards.length} SLIDES</span>
-      <h2>你今天該認識的人</h2>
+      <h2>今天值得聊聊的人</h2>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       ${engine}
@@ -368,7 +368,7 @@ function viewBrief() {
   <div class="notice notice--peepers" style="margin-top:22px">
     ${artImg('/assets/peepers-portrait.jpg', '三眼貓 Peepers', 'peepers', 'notice__avatar')}
     <div><strong>Peepers 的提醒</strong>
-      這是「值得聊一句」的排序，不是相容度分數。</div>
+      這是依照「值得聊一句」排的，不是相容度分數。</div>
   </div>`;
 }
 
@@ -408,7 +408,7 @@ function deckCard(card, index) {
           ? '<span class="badge badge--pending">已送出「想認識」</span>'
           : `<button class="btn btn--primary" data-interest="${esc(p.id)}">想認識 TA ✦</button>`
       }
-      <button class="btn" data-present-index="${index}">▣ 呈現這張卡</button>
+      <button class="btn" data-present-index="${index}">▣ 放大看這張</button>
     </div>
   </article>`;
 }
@@ -422,7 +422,7 @@ function viewIntros() {
   <div class="section__head" style="margin-bottom:18px">
     <div>
       <span class="eyebrow">INTRODUCTIONS</span>
-      <h2>誰想認識你</h2>
+      <h2>有人想認識你</h2>
     </div>
     <span class="chip chip--ghost">雙方都同意才交換</span>
   </div>
@@ -433,8 +433,8 @@ function viewIntros() {
           ${received.map(introItem).join('')}
         </div>`
       : `<div class="empty" style="margin-bottom:22px">
-          <h3>還沒人按門鈴</h3>
-          <p class="note">有人對你有興趣就會出現在這裡。你也按「想認識」，聯絡方式才交換。</p>
+          <h3>還沒有人來敲門</h3>
+          <p class="note">有人想認識你，就會出現在這裡。你也按下「想認識」，雙方都同意，連結才會成立。</p>
         </div>`
   }
 
@@ -447,13 +447,13 @@ function viewIntros() {
 function introItem(i) {
   const badge =
     i.status === 'accepted'
-      ? '<span class="badge badge--accepted">雙方都同意 ✓</span>'
+      ? '<span class="badge badge--accepted">連結成立 ✓</span>'
       : i.status === 'pending'
       ? i.direction === 'received'
         ? '<span class="badge badge--pending">等你回應</span>'
-        : '<span class="badge badge--pending">等待對方</span>'
+        : '<span class="badge badge--pending">邀請已送出，等對方回應</span>'
       : i.status === 'declined'
-      ? '<span class="badge badge--declined">已婉拒</span>'
+      ? '<span class="badge badge--declined">未成立</span>'
       : '<span class="badge badge--cancelled">已取消</span>';
 
   const gamma = state.gamma.open === i.id ? gammaForm(i) : '';
@@ -478,7 +478,7 @@ function introItem(i) {
     ${
       i.status === 'accepted'
         ? `<div class="card-actions">
-            <button class="btn btn--dark btn--sm" data-gamma-open="${i.id}">✦ 用 Gamma 做一份你們的共同 deck</button>
+            <button class="btn btn--dark btn--sm" data-gamma-open="${i.id}">✦ 一起做一份共同 deck</button>
             ${
               state.gamma.result?.introId === i.id
                 ? `<a class="btn btn--sm" href="${esc(state.gamma.result.url)}" target="_blank" rel="noopener">打開共同 deck ↗</a>`
@@ -490,7 +490,7 @@ function introItem(i) {
     ${
       i.status === 'pending' && i.direction === 'received'
         ? `<div class="card-actions">
-            <button class="btn btn--primary btn--sm" data-respond="${i.id}" data-action="accept">我也要，想認識 ✦</button>
+            <button class="btn btn--primary btn--sm" data-respond="${i.id}" data-action="accept">我也想認識 ✦</button>
             <button class="btn btn--ghost btn--sm" data-respond="${i.id}" data-action="decline">今天先不用</button>
           </div>`
         : ''
@@ -503,7 +503,7 @@ function gammaForm(i) {
   return `
   <div class="contact-box" style="margin-top:4px">
     <label class="field" style="margin-bottom:10px">
-      <span>你的 Gamma API key <small>sk-gamma-… · 只存在這個分頁，不會存到伺服器</small></span>
+      <span>你的 Gamma API key <small>sk-gamma-… · 會經本站伺服器轉送給 Gamma</small></span>
       <input type="text" name="gammaKey" value="${esc(g.key)}" placeholder="sk-gamma-xxxxxxxx" autocomplete="off" />
     </label>
     <div class="card-actions">
@@ -511,8 +511,8 @@ function gammaForm(i) {
       <button class="btn btn--ghost btn--sm" data-gamma-cancel>取消</button>
     </div>
     <p class="note" style="margin-top:8px">
-      這會呼叫 Gamma 的公開 API 產生一份 4 張卡的簡報，<strong>會消耗你帳號的 credits</strong>。
-      需要 Pro 以上方案與自己的 API key。
+      這會用你的 API key 產生一份 4 張卡的簡報，<strong>會消耗你帳號的 credits</strong>。
+      需要 Pro 以上方案。金鑰會經本站伺服器轉送給 Gamma，並暫存在伺服器記憶體中以查詢進度；我們不承諾固定的刪除時間。
     </p>
     ${g.error ? `<p class="note" style="color:#921653;margin-top:8px">${esc(g.error)}</p>` : ''}
     ${
@@ -708,7 +708,7 @@ async function sendInterest(targetId) {
   try {
     await api('/api/interest', 'POST', { targetId });
     state.intros = (await api('/api/intros')).intros;
-    toast('已送出。等對方也按「想認識」，才交換聯絡方式。');
+    toast('邀請已送出，等對方回應。雙方都同意，連結才會成立。');
     render();
   } catch (err) {
     toast(err.message);
@@ -721,7 +721,7 @@ async function respondIntro(id, action) {
     state.intros = (await api('/api/intros')).intros;
     toast(
       action === 'accept'
-        ? '雙方都同意，聯絡方式交換完成。'
+        ? '連結成立！去聊吧。'
         : '已婉拒。'
     );
     render();
@@ -743,7 +743,7 @@ async function togglePause() {
 }
 
 async function deleteMe() {
-  if (!confirm('永久刪除你的名字、一句話、三個軸、聯絡方式與所有介紹？這無法復原。')) return;
+  if (!confirm('確定要刪掉全部資料嗎？名字、一句話、聯絡方式與所有介紹都會移除，無法復原。')) return;
   try {
     await api('/api/me', 'DELETE');
     localStorage.removeItem('smg.token');

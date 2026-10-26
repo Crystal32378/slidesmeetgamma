@@ -64,11 +64,17 @@ export function openerFor(me, other, m) {
   if (b && t) {
     return `你也在做${labelOf('building', b)}。${labelOf('topics', t)}的 deck，第一頁放什麼？`;
   }
+  if (m.shared.building[0]) {
+    return `你也在做${labelOf('building', m.shared.building[0])}——你那份 deck 第一頁是什麼？`;
+  }
+  if (m.shared.topics[0]) {
+    return `你也在聊${labelOf('topics', m.shared.topics[0])}——你最近卡在哪？`;
+  }
   if (b) {
-    return `你也在做${labelOf('building', b)}——你那份 deck 第一頁是什麼？`;
+    return `${labelOf('building', b)}這塊，你現在做到哪了？`;
   }
   if (t) {
-    return `${labelOf('topics', t)}——你最近卡在哪？`;
+    return `${labelOf('topics', t)}這個話題，你最近卡在哪？`;
   }
   return '你最近在做什麼？講成 3 張卡是什麼樣子？';
 }
