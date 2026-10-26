@@ -144,7 +144,7 @@ body {
   padding: clamp(26px, 5vw, 56px) 0 72px;
 }
 .eyebrow {
-  font: 600 11px/1 var(--font-body);
+  font: 600 12.5px/1 var(--font-body);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ultramarine);
@@ -509,16 +509,17 @@ textarea { resize: vertical; min-height: 78px; }
   padding: 12px 14px;
   border-radius: 14px;
   background: var(--glacier);
-  color: var(--ink-soft);
+  color: var(--ink);
+  font-size: 14px;
   font-size: 13px;
   line-height: 1.55;
 }
 .opener {
   margin-top: 14px;
   font-family: var(--font-display);
-  font-size: clamp(20px, 2.6vw, 27px);
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: clamp(19px, 2.2vw, 23px);
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: -0.01em;
 }
 .opener::before { content: '「'; color: var(--flamingo); }
@@ -709,3 +710,6 @@ textarea { resize: vertical; min-height: 78px; }
   .topbar__title, .topbar__sep { display: none; }
 }
 .present .btn--ghost { color: var(--white); border-color: rgba(255, 255, 255, 0.55); background: transparent; }
+@media (max-width: 640px) {
+  .deck { margin-top: 30px; }
+}
