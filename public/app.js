@@ -466,6 +466,7 @@ function introItem(i) {
       </div>
       ${badge}
     </div>
+    ${i.status === 'accepted' ? '<img class="intro-link" src="/assets/connect-cat.jpg" alt="你們已互相同意" />' : ''}
     <div class="chip-row">${chipsFor(i.other)}${intentChip(i.intention)}</div>
     ${
       i.contact
@@ -839,7 +840,7 @@ function renderPresent(direction = '') {
   const p = c.profile;
   bindArtFallbacks(presentEl);
   presentEl.innerHTML = `
-    <img class="present__bg" src="/assets/abstract-cards.jpg" alt="" aria-hidden="true" />
+    <img class="present__bg" src="/assets/sky-wide.jpg" alt="" aria-hidden="true" />
     <div class="present__stage">
       <img class="present__mascot" src="/assets/peepers-portrait.jpg" alt="三眼貓 Peepers" />
       <div class="present__card ${direction}">

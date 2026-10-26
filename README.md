@@ -52,7 +52,7 @@ npm test           # 20 項煙霧測試：真的開 server、真的走完報名�
 | 變數 | 預設 | 說明 |
 |---|---|---|
 | `PORT` | `8080` | 服務埠 |
-| `EVENT_ID` / `EVENT_NAME` / `EVENT_NAME_ZH` / `EVENT_DATE` | Gamma Community Night | 活動資訊（顯示在頁面上） |
+| `EVENT_ID` / `EVENT_NAME` / `EVENT_NAME_ZH` / `EVENT_DATE` | Gamma Community Exclusive | 活動資訊（顯示在頁面上） |
 | `BRIEF_SIZE` | `3` | 每份 brief 回幾張卡 |
 | `DATA_FILE` | `data/attendees.json` | 資料檔位置（測試時可指到別處） |
 | `SCOUT_API_KEY` | — | 有值則啟用 live scout（OpenAI-compatible），沒有就用腳本化配對 |

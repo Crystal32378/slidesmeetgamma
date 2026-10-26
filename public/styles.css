@@ -426,6 +426,7 @@ textarea { resize: vertical; min-height: 78px; }
   to { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)) scale(1); }
 }
 .deck-card {
+  background: linear-gradient(rgba(255, 253, 246, 0.93), rgba(255, 253, 246, 0.93)), url('/assets/card-blank.jpg') center / cover no-repeat, var(--white);
   --tilt: 0deg;
   animation: cardIn 0.6s var(--ease) backwards;
   animation-delay: calc(var(--i, 0) * 90ms);
@@ -712,4 +713,15 @@ textarea { resize: vertical; min-height: 78px; }
 .present .btn--ghost { color: var(--white); border-color: rgba(255, 255, 255, 0.55); background: transparent; }
 @media (max-width: 640px) {
   .deck { margin-top: 30px; }
+}
+
+/* 連結圖：只在雙方都同意後出現 */
+.intro-link {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 18px;
+  margin: 12px 0 4px;
+  border: 1px solid var(--line);
 }
