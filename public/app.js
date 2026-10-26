@@ -383,7 +383,7 @@ function deckCard(card, index) {
   );
 
   return `
-  <article class="deck-card ${tilt}">
+  <article class="deck-card ${tilt}" style="--i:${index}">
     <span class="deck-card__no">SLIDE ${String(index + 1).padStart(2, '0')}</span>
     <div class="deck-card__art">${artImg(art.src, art.alt, key)}</div>
 
@@ -829,10 +829,10 @@ function movePresent(step) {
   const next = state.present.index + step;
   if (next < 0 || next >= cards.length) return;
   state.present.index = next;
-  renderPresent();
+  renderPresent(step > 0 ? 'is-next' : 'is-prev');
 }
 
-function renderPresent() {
+function renderPresent(direction = '') {
   const cards = state.brief?.cards || [];
   const i = state.present.index;
   const c = cards[i];
@@ -842,7 +842,7 @@ function renderPresent() {
     <img class="present__bg" src="/assets/abstract-cards.jpg" alt="" aria-hidden="true" />
     <div class="present__stage">
       <img class="present__mascot" src="/assets/peepers-portrait.jpg" alt="三眼貓 Peepers" />
-      <div class="present__card">
+      <div class="present__card ${direction}">
         <span class="eyebrow">SLIDE ${String(i + 1).padStart(2, '0')} / ${String(cards.length).padStart(2, '0')} · ${esc(p.name)}</span>
         <h2 style="margin:10px 0 6px">${esc(p.name)}</h2>
         <p class="note" style="font-size:16px">${esc(p.tagline || '')}</p>

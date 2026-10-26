@@ -419,8 +419,26 @@ textarea { resize: vertical; min-height: 78px; }
   box-shadow: var(--shadow-card);
   overflow: visible;
 }
-.deck-card--tilt { transform: rotate(-0.7deg); }
-.deck-card--tilt-r { transform: rotate(0.7deg); }
+/* 卡片入場：一張一張「翻」進來，像從桌上撿起一張卡片。
+   --i 由 app.js 設定；reduced-motion 會由底部全域規則關掉。 */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) rotate(var(--tilt, 0deg)) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)) scale(1); }
+}
+.deck-card {
+  --tilt: 0deg;
+  animation: cardIn 0.6s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms);
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+}
+/* 懸停時卡片「坐直」並浮起，像是要你多看它一眼。 */
+.deck-card:hover,
+.deck-card:focus-within {
+  transform: translateY(-4px) rotate(0deg);
+  box-shadow: var(--shadow-lift);
+}
+.deck-card--tilt { --tilt: -0.7deg; transform: rotate(-0.7deg); }
+.deck-card--tilt-r { --tilt: 0.7deg; transform: rotate(0.7deg); }
 .deck-card__no {
   position: absolute;
   top: -14px;
@@ -591,10 +609,29 @@ textarea { resize: vertical; min-height: 78px; }
   flex-direction: column;
   justify-content: center;
 }
+/* 翻頁：依方向滑入，讓「下一張」有前進感、「上一張」有倒退感。 */
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(42px) rotate(0.6deg); }
+  to { opacity: 1; transform: translateX(0) rotate(0deg); }
+}
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-42px) rotate(-0.6deg); }
+  to { opacity: 1; transform: translateX(0) rotate(0deg); }
+}
+.present__card.is-next { animation: slideFromRight 0.42s var(--ease) both; }
+.present__card.is-prev { animation: slideFromLeft 0.42s var(--ease) both; }
 .present__bar { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.75); font-size: 13px; }
 .present__dots { display: flex; gap: 6px; }
 .present__dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); }
 .present__dots i.on { background: var(--flamingo); }
+.present__dots i { transition: transform 0.3s var(--ease), background 0.3s var(--ease); }
+.present__dots i.on { transform: scale(1.35); }
+
+/* 手機：卡片與按鈕留足觸控空間 */
+@media (max-width: 640px) {
+  .present__mascot { width: 92px; height: 92px; top: -34px; right: -6px; }
+  .present__bar { flex-wrap: wrap; justify-content: center; }
+}
 
 /* ── Toast ─────────────────────────────────────────────────────────── */
 .toast {
