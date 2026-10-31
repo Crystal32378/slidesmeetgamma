@@ -13,7 +13,7 @@ Every attendee gets a three-card deck introducing who they should meet.
 
 ```sh
 npm start          # → http://localhost:8080
-npm test           # 20 項煙霧測試：真的開 server、真的走完報名→配對→雙方同意→刪除
+npm test           # 28 項煙霧測試 + Gamma 授權、金鑰清理、前端狀態與資料儲存測試（不呼叫付費 API）
 ```
 
 零依賴、零 build step、Node ≥ 22。`npm install` 不需要跑。
@@ -66,10 +66,13 @@ npm test           # 20 項煙霧測試：真的開 server、真的走完報名�
 
 雙方同意後，在「介紹」頁按「✦ 用 Gamma 做一份你們的共同 deck」：
 
-1. 貼上你自己的 `sk-gamma-…` API key（只留在該分頁記憶體，不寫進伺服器、不寫進資料檔）
+1. 貼上你自己的 `sk-gamma-…` API key（經本站伺服器轉送給 Gamma；暫存在伺服器記憶體中供產出者查詢進度，不寫進資料檔。30 分鐘後失效，背景每分鐘清理；任一參加者刪除資料時也會清除）
 2. 按「產生共同 deck」→ 呼叫 `POST https://public-api.gamma.app/v1.0/generations`
    （`textMode: preserve`、`format: presentation`、`numCards: 4`、`exportAs: pdf`）
-3. 前端輪詢狀態，完成後給你 deck 連結
+3. 前端輪詢狀態，完成且取得 HTTPS 網址後才顯示 deck 連結。同一分頁同時只送出一筆產出請求；關閉面板不會取消 Gamma 已收到的產出或退回點數。
+4. 貼上的金鑰送出後即從輸入欄位清除；刪除參加資料或離開頁面時，清除前端 Gamma 狀態並停止查詢。若連線中斷或結果不明，先到 Gamma 確認再重送，避免重複消耗點數。
+
+這項防重複保護限於同一分頁，不是伺服器端的跨分頁去重或退款保證。
 
 **這會消耗你帳號的 Gamma credits，需要 Pro 以上方案。** 工具不會自動重試，也不會要求任何人付款。
 

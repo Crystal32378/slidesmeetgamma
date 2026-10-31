@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
-    "test": "node scripts/smoke.mjs"
+    "test": "node scripts/smoke.mjs && node --test scripts/*.test.mjs"
   },
   "license": "MIT"
 }

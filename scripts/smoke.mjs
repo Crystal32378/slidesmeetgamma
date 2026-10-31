@@ -53,7 +53,7 @@ const profile = (name, contact, taste = 'surreal') => ({
 
 await rm(DATA_FILE, { force: true });
 const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.mjs')], {
-  env: { ...process.env, PORT: String(PORT), DATA_FILE, EVENT_ID: 'smoke-test' },
+  env: { ...process.env, PORT: String(PORT), DATA_FILE, EVENT_ID: 'smoke-test', GAMMA_API_KEY: '', SCOUT_API_KEY: '' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 child.stderr.on('data', (d) => process.stderr.write(`[server] ${d}`));
@@ -101,6 +101,32 @@ check(
   'demo 卡不會混進真人參加者',
   demoBrief.data.cards.every((c) => c.profile.mode === 'demo')
 );
+
+// Direct API calls must obey the same pool and intention rules as the brief.
+const sendInterest = (token, targetId, intention) => req('/api/interest', {
+  method: 'POST', token, body: { targetId, ...(intention ? { intention } : {}) },
+});
+check('live 不能直接向 demo 參加者送邀請',
+  (await sendInterest(join1.data.token, demoJoin.data.id)).status === 404);
+check('demo 不能直接向 live 參加者送邀請',
+  (await sendInterest(demoJoin.data.token, join1.data.id)).status === 404);
+check('live 不能向虛構 cast 送邀請',
+  (await sendInterest(join1.data.token, 'demo-lin')).status === 404);
+check('demo 仍可向同意圖的虛構 cast 送邀請',
+  (await sendInterest(demoJoin.data.token, 'demo-lin')).status === 201);
+await req('/api/me/status', { method: 'POST', token: join2.data.token, body: { active: false } });
+check('不能向暫停配對的人送新邀請',
+  (await sendInterest(join1.data.token, join2.data.id)).status === 404);
+await req('/api/me/status', { method: 'POST', token: join2.data.token, body: { active: true } });
+const differentIntent = await req('/api/join', {
+  method: 'POST', body: { ...profile('DifferentIntent', 'private@example.com'), intentions: ['crew'] },
+});
+check('沒有共同意圖時拒絕直接邀請',
+  (await sendInterest(join1.data.token, differentIntent.data.id)).status === 400);
+check('不能偽造邀請意圖',
+  (await sendInterest(join1.data.token, join2.data.id, 'crew')).status === 400);
+check('拒絕的邀請不會產生介紹紀錄',
+  (await req('/api/intros', { token: join1.data.token })).data.intros.length === 0);
 
 const interest = await req('/api/interest', {
   method: 'POST',

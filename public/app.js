@@ -36,13 +36,14 @@ const state = {
 };
 
 // ── api ──────────────────────────────────────────────────────────────────────
-async function api(path, method = 'GET', body) {
+async function api(path, method = 'GET', body, signal) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
   if (state.token) headers['x-smg-token'] = state.token;
   const res = await fetch(path, {
     method,
     headers,
+    signal,
     body: body ? JSON.stringify(body) : undefined,
   });
   let data = null;
@@ -54,6 +55,7 @@ async function api(path, method = 'GET', body) {
   if (!res.ok) {
     const err = new Error(data?.error || '連線有點問題，再試一次。');
     err.data = data;
+    err.status = res.status;
     throw err;
   }
   return data;
@@ -480,7 +482,7 @@ function introItem(i) {
         ? `<div class="card-actions">
             <button class="btn btn--dark btn--sm" data-gamma-open="${i.id}">✦ 一起做一份共同 deck</button>
             ${
-              state.gamma.result?.introId === i.id
+              state.gamma.result?.introId === i.id && /complete|success|done/i.test(state.gamma.result.status) && safeGammaUrl(state.gamma.result.url)
                 ? `<a class="btn btn--sm" href="${esc(state.gamma.result.url)}" target="_blank" rel="noopener">打開共同 deck ↗</a>`
                 : ''
             }
@@ -504,19 +506,19 @@ function gammaForm(i) {
   <div class="contact-box" style="margin-top:4px">
     <label class="field" style="margin-bottom:10px">
       <span>你的 Gamma API key <small>sk-gamma-… · 會經本站伺服器轉送給 Gamma</small></span>
-      <input type="text" name="gammaKey" value="${esc(g.key)}" placeholder="sk-gamma-xxxxxxxx" autocomplete="off" />
+      <input type="password" name="gammaKey" value="${esc(g.key)}" placeholder="sk-gamma-xxxxxxxx" autocomplete="off" ${g.gen ? 'disabled' : ''} />
     </label>
     <div class="card-actions">
-      <button class="btn btn--primary btn--sm" data-gamma-run="${i.id}">產生共同 deck</button>
-      <button class="btn btn--ghost btn--sm" data-gamma-cancel>取消</button>
+      <button class="btn btn--primary btn--sm" data-gamma-run="${i.id}" ${g.gen ? 'disabled' : ''}>${g.gen ? '產生中…' : '產生共同 deck'}</button>
+      <button class="btn btn--ghost btn--sm" data-gamma-cancel>${g.gen ? '關閉面板' : '取消'}</button>
     </div>
     <p class="note" style="margin-top:8px">
       這會用你的 API key 產生一份 4 張卡的簡報，<strong>會消耗你帳號的 credits</strong>。
-      需要 Pro 以上方案。金鑰會經本站伺服器轉送給 Gamma，並暫存在伺服器記憶體中以查詢進度；我們不承諾固定的刪除時間。
+      需要 Pro 以上方案。金鑰會經本站伺服器轉送給 Gamma，並暫存在伺服器記憶體中供產出者查詢進度。30 分鐘後失效，背景每分鐘清理；任一參加者刪除資料時也會清除。關閉面板不會取消已送到 Gamma 的產出，也不會退回點數。
     </p>
     ${g.error ? `<p class="note" style="color:#921653;margin-top:8px">${esc(g.error)}</p>` : ''}
     ${
-      g.gen && g.result?.introId !== i.id
+      g.gen === i.id
         ? '<p class="note" style="margin-top:8px">產生中…稍等一下下。</p>'
         : ''
     }
@@ -635,6 +637,7 @@ document.addEventListener('click', async (e) => {
   }
   if (e.target.closest('[data-gamma-cancel]')) {
     state.gamma.open = null;
+    state.gamma.key = '';
     render();
     return;
   }
@@ -746,6 +749,7 @@ async function deleteMe() {
   if (!confirm('確定要刪掉全部資料嗎？名字、一句話、聯絡方式與所有介紹都會移除，無法復原。')) return;
   try {
     await api('/api/me', 'DELETE');
+    resetGamma();
     localStorage.removeItem('smg.token');
     state.token = null;
     state.me = null;
@@ -759,54 +763,92 @@ async function deleteMe() {
   }
 }
 
+// One paid generation at a time per tab. Closing the panel does not cancel it.
+let gammaRunId = 0;
+let gammaController = null;
+
+function resetGamma() {
+  gammaRunId += 1;
+  gammaController?.abort();
+  gammaController = null;
+  state.gamma = { open: null, key: '', gen: null, result: null, error: null };
+}
+
+function safeGammaUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : '';
+  } catch { return ''; }
+}
+
+window.addEventListener('pagehide', () => {
+  resetGamma();
+  render(); // A back/forward cache restore must not revive a key in the DOM.
+});
+
 async function runGamma(introId) {
+  if (state.gamma.gen || !state.token) return;
+  const run = ++gammaRunId;
+  const session = state.token;
+  const controller = new AbortController();
+  gammaController = controller;
+  const current = () => run === gammaRunId && session === state.token;
+  const gammaKey = state.gamma.key.trim();
+  state.gamma.key = '';
   state.gamma.error = null;
-  state.gamma.gen = true;
+  state.gamma.result = null;
+  state.gamma.gen = introId;
   render();
   try {
-    const created = await api('/api/gamma/deck', 'POST', {
-      introId,
-      gammaKey: state.gamma.key.trim(),
-    });
-    state.gamma.gen = null;
+    const created = await api('/api/gamma/deck', 'POST', { introId, gammaKey }, controller.signal);
+    if (!current()) return;
+    if (!created?.generationId) throw new Error('沒有收到產出編號。請先到 Gamma 確認結果，避免重複扣點。');
     state.gamma.result = { introId, url: '', status: 'processing' };
     render();
-    await pollGamma(created.generationId, introId);
+    await pollGamma(created.generationId, introId, current, controller.signal);
   } catch (err) {
-    state.gamma.gen = null;
-    state.gamma.error = err.message;
-    render();
+    if (!current() || err.name === 'AbortError') return;
+    state.gamma.error = err.status
+      ? err.message
+      : `${err.message || '連線中斷。'} 請先到 Gamma 確認是否已產出，再決定要不要重新送出；重送可能再次消耗點數。`;
+  } finally {
+    if (current()) {
+      state.gamma.gen = null;
+      gammaController = null;
+      render();
+    }
   }
 }
 
-async function pollGamma(generationId, introId) {
+async function pollGamma(generationId, introId, current, signal) {
   for (let i = 0; i < 80; i += 1) {
     await new Promise((r) => setTimeout(r, 2500));
+    if (!current() || signal.aborted) return;
     let data = null;
     try {
-      data = await api(`/api/gamma/status/${generationId}`);
-    } catch {
+      data = await api(`/api/gamma/status/${encodeURIComponent(generationId)}`, 'GET', undefined, signal);
+    } catch (err) {
+      if (!current() || err.name === 'AbortError') return;
+      if ([401, 403, 404, 410].includes(err.status)) {
+        state.gamma.error = `${err.message} 已停止查詢。請先到 Gamma 確認結果，避免重複扣點。`;
+        return;
+      }
       continue;
     }
+    if (!current()) return;
     const status = data?.status || data?.state || '';
-    const url = data?.url || data?.gamma?.url || data?.gammaUrl || data?.exportUrl || '';
+    const url = safeGammaUrl(data?.url || data?.gamma?.url || data?.gammaUrl || data?.exportUrl || '');
     if (/complete|success|done/i.test(status) && url) {
       state.gamma.result = { introId, url, status };
-      state.gamma.gen = null;
-      render();
       toast('共同 deck 好了。');
       return;
     }
-    if (/fail|error/i.test(status)) {
-      state.gamma.gen = null;
-      state.gamma.error = data?.error || 'Gamma 這次沒做成，再試一次。';
-      render();
+    if (/fail|error/i.test(status) || data?.error) {
+      state.gamma.error = typeof data.error === 'string' ? data.error : 'Gamma 這次未能完成。請先到 Gamma 確認結果，再決定是否重送。';
       return;
     }
   }
-  state.gamma.gen = null;
-  state.gamma.error = '還在產出中——晚點回來看，或直接到 Gamma 的 API Generated 看。';
-  render();
+  if (current()) state.gamma.error = '暫時無法確認產出結果，已停止查詢。請到 Gamma 的 API Generated 確認，避免重新送出而重複扣點。';
 }
 
 // ── Present 模式 ────────────────────────────────────────────────────────────

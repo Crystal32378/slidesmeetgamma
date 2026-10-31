@@ -10,13 +10,15 @@
 // - demo 資料與真實資料分開，不混用
 
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID, randomBytes } from 'node:crypto';
 
 import { INTENTS, BUILDING, TASTE, TOPICS } from './data/catalog.js';
 import { DEMO_CAST } from './data/demo-cast.js';
+import { GammaJobs } from './data/gamma-jobs.js';
+import { createSaver } from './data/persistence.js';
 import { scoreMatch, makeCard, publicProfile, overlap } from './data/matching.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,7 +39,7 @@ const EVENT = {
 
 // ── store ────────────────────────────────────────────────────────────────────
 let db = { eventId: EVENT.id, attendees: {}, intros: {} };
-let saveQueue = Promise.resolve();
+const save = createSaver(DATA_FILE, () => db);
 
 async function load() {
   try {
@@ -51,16 +53,6 @@ async function load() {
   } catch {
     db = { eventId: EVENT.id, attendees: {}, intros: {} };
   }
-}
-
-function save() {
-  saveQueue = saveQueue.then(async () => {
-    await mkdir(DATA_DIR, { recursive: true });
-    const tmp = `${DATA_FILE}.tmp`;
-    await writeFile(tmp, JSON.stringify(db, null, 2), 'utf8');
-    await rename(tmp, DATA_FILE);
-  });
-  return saveQueue;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -180,7 +172,9 @@ async function liveScout(me, other, card) {
 // ── optional Gamma Public API ────────────────────────────────────────────────
 const GAMMA_KEY = process.env.GAMMA_API_KEY || '';
 const gammaConfigured = () => Boolean(GAMMA_KEY);
-const gammaKeyStore = new Map(); // generationId -> { key, expires }
+const gammaKeyStore = new GammaJobs();
+const gammaCleanup = setInterval(() => gammaKeyStore.cleanup(), 60 * 1000);
+gammaCleanup.unref();
 const GAMMA_BASE = 'https://public-api.gamma.app/v1.0';
 
 function deckPromptFor(intro, me, other) {
@@ -384,6 +378,7 @@ const server = createServer(async (req, res) => {
       const me = requireAuth(req, res, url);
       if (!me) return;
       delete db.attendees[me.id];
+      gammaKeyStore.deleteForAttendee(me.id);
       for (const [id, intro] of Object.entries(db.intros)) {
         if (intro.from === me.id || intro.to === me.id) delete db.intros[id];
       }
@@ -443,12 +438,15 @@ const server = createServer(async (req, res) => {
       if (!me) return;
       const body = await readBody(req);
       const targetId = String(body.targetId || '');
-      const target =
-        me.mode === 'demo'
-          ? DEMO_CAST.find((c) => c.id === targetId)
-          : db.attendees[targetId];
+      if (targetId === me.id) return send(res, 400, { error: '不能認識自己。' });
+      // Enforce the same pool boundary as matching, even for direct API requests.
+      const target = poolFor(me).find((candidate) => candidate.id === targetId);
       if (!target) return send(res, 404, { error: '找不到這位參加者。' });
-      if (target.id === me.id) return send(res, 400, { error: '不能認識自己。' });
+      const sharedIntentions = overlap(me.intentions, target.intentions);
+      const intention = body.intention || sharedIntentions[0];
+      if (!sharedIntentions.includes(intention)) {
+        return send(res, 400, { error: '請選擇雙方共同的參加意圖。' });
+      }
 
       const existing = Object.values(db.intros).find(
         (i) => i.from === me.id && i.to === target.id && i.status !== 'declined'
@@ -464,7 +462,7 @@ const server = createServer(async (req, res) => {
         to: target.id,
         fromName: me.displayName,
         toName: target.displayName,
-        intention: body.intention || me.intentions[0],
+        intention,
         shared: m.shared,
         fromYes: true,
         toYes: false,
@@ -556,15 +554,20 @@ const server = createServer(async (req, res) => {
       }
       const genId = result.json?.id || result.json?.generationId;
       if (!genId) return send(res, 502, { error: 'Gamma 回應格式不如預期。', detail: result.json });
-      gammaKeyStore.set(genId, { key, expires: Date.now() + 30 * 60 * 1000 });
+      // A participant may have deleted their profile while Gamma was responding.
+      if (!db.attendees[me.id] || !db.intros[intro.id]) {
+        return send(res, 410, { error: '參加資料或介紹已刪除。' });
+      }
+      gammaKeyStore.set(genId, { key, ownerId: me.id, participantIds: [intro.from, intro.to] });
       return send(res, 201, { generationId: genId, inputText, engine: 'gamma-public-api' });
     }
 
     if (pathname.startsWith('/api/gamma/status/') && method === 'GET') {
-      requireAuth(req, res, url);
+      const me = requireAuth(req, res, url);
+      if (!me) return;
       const genId = pathname.split('/')[4];
       const stored = gammaKeyStore.get(genId);
-      if (!stored || stored.expires < Date.now()) {
+      if (!stored || stored.ownerId !== me.id) {
         return send(res, 410, { error: '這次產出的金鑰已過期，請重新送出。' });
       }
       const result = await gammaStatus(genId, stored.key);
@@ -606,7 +609,7 @@ function viewIntro(intro, me) {
 await load();
 server.listen(PORT, () => {
   console.log(`\n  Slides Meets Gamma`);
-  console.log(`  → http://localhost:${PORT}`);
+  console.log(`  → http://localhost:${server.address().port}`);
   console.log(`  event: ${EVENT.name} (${EVENT.id})`);
   console.log(`  scout: ${scoutLive() ? `live-ai (${SCOUT_MODEL})` : 'scripted'}`);
   console.log(`  gamma api: ${gammaConfigured() ? 'configured' : 'not configured (貼上自己的 key 即可)'}\n`);
